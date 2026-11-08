@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>即時波動率溫度計 | Yung's Journey to FIRE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.gauge-card{display:grid;grid-template-columns:minmax(260px,420px) 1fr;gap:28px;align-items:center;margin-top:22px}
+.gauge-card:hover,.card.st:hover{transform:none}
+.big{font-family:var(--mono);font-size:clamp(44px,9vw,72px);font-weight:600;line-height:1}
+.state{font-family:var(--mono);font-size:12px;color:var(--text-secondary);margin-top:8px}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:6px}
+.kv div{border:1px solid var(--border-soft);border-radius:4px;padding:10px 12px}
+.kv small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--text-tertiary)}.kv b{font-family:var(--mono);font-size:16px;font-weight:500}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.pos{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--accent);margin:4px 0}
+.desc{color:var(--text-secondary);font-size:13px}
+h3.sec{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.08em;margin:34px 0 12px;font-weight:500}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+th{color:var(--text-tertiary);font-weight:400;text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+td{padding:8px 10px;border-bottom:1px solid var(--border-soft)}tr:hover td{background:var(--bg-panel-hover)}
+.bar{height:6px;background:var(--border-soft);border-radius:3px;min-width:90px;position:relative}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--accent)}
+.num{text-align:right}.na{color:var(--text-tertiary)}
+.warn{font-family:var(--mono);font-size:11.5px;color:var(--amber);background:var(--amber-dim);border-radius:4px;padding:8px 12px;margin-top:14px;display:none}
+.scroll{overflow-x:auto}.chart{width:100%;height:220px}
+.legend{font-family:var(--mono);font-size:11px;color:var(--text-tertiary);margin-top:6px}
+@media(max-width:900px){.gauge-card{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}}
+</style></head><body>
+<div class="wrap">
+<header class="site"><a class="brand" href="https://leveragevolatilitylife.github.io/"><img src="assets/avatar.jpg" alt="" onerror="this.style.display='none'"><span>Yung's Journey to FIRE</span></a>
+<div class="hr"><span class="meta-date">CBOE · INTRADAY SNAPSHOT</span><a class="handle" href="https://www.instagram.com/leverage_volatility_life/">@leverage_volatility_life</a></div></header>
+<a class="crumb" href="https://leveragevolatilitylife.github.io/">← 回到入口</a>
+<div class="eyebrow">VOLATILITY BAROMETER · LIVE</div>
+<h1>即時波動率溫度計</h1><div class="sub">Real-time Volatility Barometer</div>
+
+<section class="card gauge-card" aria-live="polite">
+ <div><svg id="gauge" viewBox="0 0 400 235" width="100%" role="img" aria-label="波動率溫度計"></svg></div>
+ <div>
+  <div class="tick" id="asof">載入中…</div>
+  <div class="big" id="val">--</div><div class="state" id="zone"></div>
+  <div class="kv" id="kv"></div>
+  <div class="warn" id="warn"></div>
+ </div>
+</section>
+
+<h3 class="sec">// 三大輪動策略 · 以目前溫度計換算的部位</h3>
+<div class="grid3" id="strats"></div>
+
+<h3 class="sec">// 今日走勢（每次更新一點）</h3>
+<div class="card" style="padding:14px"><svg id="intra" class="chart" viewBox="0 0 900 220" preserveAspectRatio="none"></svg><div class="legend" id="intra-lg"></div></div>
+
+<h3 class="sec">// 開盤後一小時紀錄（每個交易日自動記錄）</h3>
+<div class="card" style="padding:14px"><svg id="hist" class="chart" viewBox="0 0 900 220" preserveAspectRatio="none"></svg><div class="legend">橫虛線：Defensive 20% / 66% / 85%；Tactical 60% / 95%</div></div>
+<div class="scroll" style="margin-top:12px"><table id="snaps"></table></div>
+
+<h3 class="sec">// 13 項指標明細</h3>
+<div class="scroll"><table id="mt"></table></div>
+<p class="desc" style="margin-top:10px">風險分位＝該指標在歷史資料中的百分位（「低＝風險」者已反轉）。溫度計＝各指標風險分位依權重加總；權重由作者公開輸出擬合得到，非官方公式。若期貨資料暫時取不到，缺值指標會被剔除並重新正規化，覆蓋率會下降（期貨類指標約占 47% 權重）。</p>
+<footer class="site">本網站與所連結頁面之內容僅為個人資料整理與策略追蹤工具,不構成任何投資建議。資料來源：Yahoo Finance、CBOE 延遲報價（經 volchart.io），約有 15 分鐘延遲。</footer>
+</div>
+<script src="assets/app.js"></script></body></html>

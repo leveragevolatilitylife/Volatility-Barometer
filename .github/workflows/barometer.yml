@@ -1,0 +1,31 @@
+name: barometer
+on:
+  workflow_dispatch:
+    inputs:
+      mode: { description: "live 或 snapshot", default: "live" }
+      force: { description: "強制執行 (true/false)", default: "false" }
+  schedule:
+    # GitHub 內建 cron 常延遲；準點觸發請用 cron-job.org 呼叫 workflow_dispatch（見 README）。
+    # 以下為備援：開盤後約 1 小時 (夏令 14:45 UTC / 冬令 15:45 UTC)，每 10 分鐘重試，腳本內以美東時間判斷並避免重複記錄。
+    - cron: "45,55 14,15 * * 1-5"
+    - cron: "5,15,25,35 15,16 * * 1-5"
+permissions: { contents: write }
+concurrency: { group: barometer, cancel-in-progress: false }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install numpy
+      - name: Snapshot / live
+        env: { MODE: "${{ github.event.inputs.mode || 'snapshot' }}", FORCE: "${{ github.event.inputs.force }}" }
+        run: |
+          ARGS="--mode $MODE"; [ "$FORCE" = "true" ] && ARGS="$ARGS --force"
+          python scripts/fetch_live.py $ARGS
+      - name: Commit data
+        run: |
+          git config user.name "baro-bot"; git config user.email "baro-bot@users.noreply.github.com"
+          git add data/ && (git diff --cached --quiet || git commit -m "data: $(date -u +%FT%TZ)")
+          git pull --rebase -q && git push

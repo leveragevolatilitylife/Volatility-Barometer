@@ -1,0 +1,85 @@
+{
+ "metrics": [
+  {
+   "name": "Cash VIX Oscillator",
+   "dir": "lo",
+   "weight": 0.259681
+  },
+  {
+   "name": "Adjust M1:M2 VIX Futures",
+   "dir": "lo",
+   "weight": 0.1787
+  },
+  {
+   "name": "VX30:VIX Roll Yield",
+   "dir": "lo",
+   "weight": 0.1787
+  },
+  {
+   "name": "Traders VRP",
+   "dir": "lo",
+   "weight": 0.061829
+  },
+  {
+   "name": "VIX-VOLI",
+   "dir": "hi",
+   "weight": 0.035677
+  },
+  {
+   "name": "M1:M2 VIX Futures",
+   "dir": "lo",
+   "weight": 0.035677
+  },
+  {
+   "name": "M4:M7 VIX Futures",
+   "dir": "lo",
+   "weight": 0.035677
+  },
+  {
+   "name": "VIX9D:VIX",
+   "dir": "hi",
+   "weight": 0.035677
+  },
+  {
+   "name": "VIX:VIX3M",
+   "dir": "hi",
+   "weight": 0.035677
+  },
+  {
+   "name": "VIX:VIX6M",
+   "dir": "hi",
+   "weight": 0.035677
+  },
+  {
+   "name": "Simple VRP",
+   "dir": "hi",
+   "weight": 0.035677
+  },
+  {
+   "name": "VX30 M1:M2",
+   "dir": "hi",
+   "weight": 0.035677
+  },
+  {
+   "name": "VIX (1 month)",
+   "dir": "hi",
+   "weight": 0.035677
+  }
+ ],
+ "defensive": {
+  "cash_lo": 0.2,
+  "qld_re": 0.3,
+  "xlu": 0.66,
+  "cash_hi": 0.85
+ },
+ "tactical": {
+  "gld": 0.6,
+  "vxz": 0.95
+ },
+ "tail": {
+  "w_baro": 0.8,
+  "w_px": 0.2,
+  "iyr": 0.6,
+  "caos": 0.9
+ }
+}
