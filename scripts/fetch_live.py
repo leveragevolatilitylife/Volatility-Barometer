@@ -37,7 +37,9 @@ class Ctx:
             try:
                 u = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym.replace('^','%5E')}?interval=5m&range=5d"
                 r = json.loads(http(u))["chart"]["result"][0]; q = r["indicators"]["quote"][0]
-                self.bars[sym] = [(t, o, c) for t, o, c in zip(r["timestamp"], q["open"], q["close"]) if c is not None and o is not None]
+                # 只留常規時段 09:30–16:15 ET（^VIX 等指數自 03:15 起就有盤前 K 線，不能把它當開盤價）
+                inrth = lambda t: dt.time(9, 30) <= local(t).time() <= dt.time(16, 15)
+                self.bars[sym] = [(t, o, c) for t, o, c in zip(r["timestamp"], q["open"], q["close"]) if c is not None and o is not None and inrth(t)]
             except Exception as e:
                 self.bars[sym] = []; self.err[sym] = str(e)[:80]
         return self.bars[sym]

@@ -9,7 +9,11 @@ def mk(d, lv):
     t0 = int(dt.datetime.combine(d, dt.time(9, 30), ET).timestamp())
     return [(t0 + 300 * i, lv + 0.01 * i, lv + 0.01 * i + 0.005) for i in range(78)]  # 09:30–15:55
 class FakeCtx(fl.Ctx):
-    def get_bars(self, sym): return mk(prevday, LV[sym] - .5) + mk(day, LV[sym])
+    def get_bars(self, sym):
+        pre = int(dt.datetime.combine(day, dt.time(3, 15), ET).timestamp())
+        raw = [(pre, 99.0, 99.0)] + mk(prevday, LV[sym] - .5) + mk(day, LV[sym])   # 盤前髒資料 99
+        inrth = lambda t: dt.time(9, 30) <= dt.datetime.fromtimestamp(t, ET).time() <= dt.time(16, 15)
+        return [b for b in raw if inrth(b[0])]
     def get_daily(self, sym): return [(prevday, LV[sym] - .5)]
     def get_vc(self): return (["Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"], [23.7, 22.1, 22.05, 22.05, 21.76, 21.8, 21.72, 21.7], {})
 fl.Ctx = FakeCtx
