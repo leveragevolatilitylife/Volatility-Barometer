@@ -2,13 +2,13 @@ name: barometer
 on:
   workflow_dispatch:
     inputs:
-      mode: { description: "live 或 snapshot", default: "live" }
-      force: { description: "強制執行 (true/false)", default: "false" }
+      mode: { description: "auto（補記到期時段並更新 live）或 live（只更新 live）", default: "auto" }
+      force: { description: "強制更新 live.json (true/false)", default: "false" }
   schedule:
-    # GitHub 內建 cron 常延遲；準點觸發請用 cron-job.org 呼叫 workflow_dispatch（見 README）。
-    # 以下為備援：開盤後約 1 小時 (夏令 14:45 UTC / 冬令 15:45 UTC)，每 10 分鐘重試，腳本內以美東時間判斷並避免重複記錄。
-    - cron: "45,55 14,15 * * 1-5"
-    - cron: "5,15,25,35 15,16 * * 1-5"
+    # 備援：週一至五 13:00–21:50 UTC 每 10 分鐘（涵蓋夏令/冬令的美股 09:30–16:30 ET）。
+    # GitHub 內建 cron 常延遲且可能跳過；準點請用 cron-job.org 呼叫 workflow_dispatch（見 README）。
+    # 腳本以美東時間判斷哪些時段已到期，補記缺漏並避免重複。
+    - cron: "*/10 13-21 * * 1-5"
 permissions: { contents: write }
 concurrency: { group: barometer, cancel-in-progress: false }
 jobs:
@@ -20,7 +20,7 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install numpy
       - name: Snapshot / live
-        env: { MODE: "${{ github.event.inputs.mode || 'snapshot' }}", FORCE: "${{ github.event.inputs.force }}" }
+        env: { MODE: "${{ github.event.inputs.mode || 'auto' }}", FORCE: "${{ github.event.inputs.force }}" }
         run: |
           ARGS="--mode $MODE"; [ "$FORCE" = "true" ] && ARGS="$ARGS --force"
           python scripts/fetch_live.py $ARGS

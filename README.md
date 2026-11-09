@@ -11,15 +11,21 @@
 - `data/history.csv` 歷史指標（百分位基準，到 2026-11-06）、`weights.json` 權重與門檻
 - `.github/workflows/barometer.yml` 排程；`tests/` 驗證
 
+## 記錄時段（美東時間）
+09:30（開盤價）、10:00、10:30（作者決策時點）、11:00 … 15:30、16:00（收盤）＝每日 14 筆，寫入 `data/log.csv`。
+每筆含：溫度計與覆蓋率、三策略部位、VIX/VIX9D/VIX3M/VIX6M/VOLI、HV5/HV20、**SVIX、SVXY、GLD、VXZ、QLD、QQQ、XLU、SPY、IYR、KO、CAOS 價格**、13 項指標原始值。
+- 價格取法：09:30＝當日第一根 5 分 K 的開盤價；其餘＝時段前一根 5 分 K（起點 ≤ T−5 分）的收盤價；16:00＝當日最後一根收盤價。
+- 因為 volchart 期貨約延遲 15 分鐘，時段 T 要到 T+16 分鐘（收盤 +20 分）才記錄。錯過超過 45 分鐘時仍會用 Yahoo 補記價格，但期貨類指標視為缺值（`late=1`，覆蓋率約 47%）——**回測請排除 `late=1` 或 `coverage<0.95` 的列**。
+- 回測用法：以時段 T 的部位訊號，在同一時段（或下一時段）的標的價格建倉，與 `log.csv` 的收盤列比較，即可比較「盤中即時調倉」與「收盤才決定」的差異；`def_low` 為 Defensive 磁滯狀態。
+
 ## 部署
-1. 把整個資料夾放進一個 GitHub repo（例如 `Volatility-Barometer`），Settings → Pages 選 main / root。
+1. 把整個資料夾放進 GitHub repo，Settings → Pages 選 main / root。
 2. Settings → Actions → General → Workflow permissions 選 Read and write。
-3. 準點觸發（建議）：GitHub 內建 cron 常延遲數小時，請用 cron-job.org 建 job：
+3. 準點觸發（強烈建議）：GitHub 內建 cron 常延遲，請用 cron-job.org 建 job：
    `POST https://api.github.com/repos/<帳號>/<repo>/actions/workflows/barometer.yml/dispatches`
    Header：`Authorization: Bearer <fine-grained PAT，僅該 repo 的 Actions 讀寫>`、`Accept: application/vnd.github+json`
-   Body：`{"ref":"main","inputs":{"mode":"snapshot"}}`
-   排程：週一至五、美東時間 10:45（時區選 America/New_York，自動處理夏令）。腳本會自行略過休市日與重複記錄。
-4. 盤中即時更新：同法再建一個 job（`"mode":"live"`，每 15 分鐘，美東 9:35–16:00）。
+   Body：`{"ref":"main","inputs":{"mode":"auto"}}`
+   排程：時區 America/New_York，週一至五，09:46–16:56 每 10 分鐘（或每 30 分鐘的 :16 與 :46，另加 16:20）。腳本自動略過休市日與已記錄時段。
 
 ## 重要限制（請務必知道）
 - volchart 的期貨報價約延遲 15 分鐘，所以快照在 10:45 ET 執行，指數取 ≤10:25 的 5 分 K，期貨取當下延遲報價。

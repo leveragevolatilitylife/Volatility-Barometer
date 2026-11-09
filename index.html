@@ -25,6 +25,12 @@ td{padding:8px 10px;border-bottom:1px solid var(--border-soft)}tr:hover td{backg
 .scroll{overflow-x:auto}.chart{width:100%;height:220px}
 .legend{font-family:var(--mono);font-size:11px;color:var(--text-tertiary);margin-top:6px}
 @media(max-width:900px){.gauge-card{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}}
+.toolbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+select{background:var(--bg);color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-family:var(--mono);font-size:12px;padding:3px 6px}
+.dl{color:var(--accent);border-color:rgba(var(--accent-rgb),.5)}.dl:hover{background:var(--bg-panel-hover)}
+td.rk{color:#fff;text-shadow:0 0 2px rgba(0,0,0,.85);text-align:center;font-weight:600}
+.scale{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--text-tertiary);margin:6px 0}.scale span{display:flex}.scale b{width:22px;height:10px;display:block}
+.slotrow-late td{opacity:.55}
 </style></head><body>
 <div class="wrap">
 <header class="site"><a class="brand" href="https://leveragevolatilitylife.github.io/"><img src="assets/avatar.jpg" alt="" onerror="this.style.display='none'"><span>Yung's Journey to FIRE</span></a>
@@ -46,14 +52,14 @@ td{padding:8px 10px;border-bottom:1px solid var(--border-soft)}tr:hover td{backg
 <h3 class="sec">// 三大輪動策略 · 以目前溫度計換算的部位</h3>
 <div class="grid3" id="strats"></div>
 
-<h3 class="sec">// 今日走勢（每次更新一點）</h3>
-<div class="card" style="padding:14px"><svg id="intra" class="chart" viewBox="0 0 900 220" preserveAspectRatio="none"></svg><div class="legend" id="intra-lg"></div></div>
-
-<h3 class="sec">// 開盤後一小時紀錄（每個交易日自動記錄）</h3>
-<div class="card" style="padding:14px"><svg id="hist" class="chart" viewBox="0 0 900 220" preserveAspectRatio="none"></svg><div class="legend">橫虛線：Defensive 20% / 66% / 85%；Tactical 60% / 95%</div></div>
+<h3 class="sec">// 時段紀錄 · 開盤、每半小時、收盤（含 11 檔輪動標的價格）</h3>
+<div class="card" style="padding:14px"><div class="toolbar"><label class="tick">交易日 <select id="daysel"></select></label><a class="tag dl" href="data/log.csv" download>下載 log.csv（回測用）</a><span class="tick" id="logmeta"></span></div>
+<svg id="intra" class="chart" viewBox="0 0 900 220" preserveAspectRatio="none"></svg><div class="legend">點的顏色＝風險色階（綠低風險 → 紅高風險）；空心點＝期貨資料缺漏（補記）、覆蓋率低，回測請排除。</div></div>
 <div class="scroll" style="margin-top:12px"><table id="snaps"></table></div>
-
+<h3 class="sec">// 每日 10:30（開盤後一小時）溫度計走勢</h3>
+<div class="card" style="padding:14px"><svg id="hist" class="chart" viewBox="0 0 900 220" preserveAspectRatio="none"></svg><div class="legend">橫虛線：Defensive 20% / 66% / 85%；Tactical 60% / 95%</div></div>
 <h3 class="sec">// 13 項指標明細</h3>
+<div class="scale"><span>低風險</span><span id="scale"></span><span>高風險</span></div>
 <div class="scroll"><table id="mt"></table></div>
 <p class="desc" style="margin-top:10px">風險分位＝該指標在歷史資料中的百分位（「低＝風險」者已反轉）。溫度計＝各指標風險分位依權重加總；權重由作者公開輸出擬合得到，非官方公式。若期貨資料暫時取不到，缺值指標會被剔除並重新正規化，覆蓋率會下降（期貨類指標約占 47% 權重）。</p>
 <footer class="site">本網站與所連結頁面之內容僅為個人資料整理與策略追蹤工具,不構成任何投資建議。資料來源：Yahoo Finance、CBOE 延遲報價（經 volchart.io），約有 15 分鐘延遲。</footer>

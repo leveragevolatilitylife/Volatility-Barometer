@@ -1,1 +1,95 @@
-{"asof_et": "2026-11-09T10:45:00-05:00", "trade_date": "2026-11-09", "bar_time_et": "10:25", "barometer": 0.8626, "coverage": 1.0, "price_signal": 0.8363, "tail_score": 0.8573, "strategies": {"defensive": "Cash", "tactical": "GLD", "tail": "IYR/KO"}, "inputs": {"VIX": 25.11, "VIX9D": 24.11, "VIX3M": 26.11, "VIX6M": 25.61, "VOLI": 23.11, "HV5": 36.235637598965845, "HV20": 19.81282269795518, "roll_w": 0.3, "K": 6, "futures": [23.7, 22.1, 22.05, 22.05, 21.76, 21.8, 21.72]}, "metrics": {"Cash VIX Oscillator": {"value": 2.5, "risk": 0.8344603055346858}, "Adjust M1:M2 VIX Futures": {"value": -0.022807794508414525, "risk": 0.9303781617831205}, "VX30:VIX Roll Yield": {"value": -0.10075667064914384, "risk": 0.9616829451540195}, "Traders VRP": {"value": -10.511163266321951, "risk": 0.9792136238417231}, "VIX-VOLI": {"value": 2.0, "risk": 0.3814174805910343}, "M1:M2 VIX Futures": {"value": -0.0675105485232067, "risk": 0.9664412722263962}, "M4:M7 VIX Futures": {"value": -0.014965986394557929, "risk": 0.922113698973203}, "VIX9D:VIX": {"value": 0.9601752289924332, "risk": 0.5862759829701979}, "VIX:VIX3M": {"value": 0.9617004978935274, "risk": 0.8417230152767343}, "VIX:VIX6M": {"value": 0.9804763764154627, "risk": 0.9151014274981217}, "Simple VRP": {"value": 5.297177302044819, "risk": 0.6413724017029803}, "VX30 M1:M2": {"value": 22.58, "risk": 0.7966441272226397}, "VIX (1 month)": {"value": 25.11, "risk": 0.8781617831204608}}, "sources": {"VIX": "yahoo", "VIX9D": "yahoo", "VIX3M": "yahoo", "VIX6M": "yahoo", "VOLI": "yahoo"}}
+{
+ "asof_et": "2026-11-09T06:01:22-05:00",
+ "trade_date": "2026-11-06",
+ "bar_time_et": "16:10",
+ "barometer": 0.9292,
+ "coverage": 1.0,
+ "price_signal": 0.8441,
+ "tail_score": 0.9122,
+ "strategies": {
+  "defensive": "Cash",
+  "tactical": "GLD",
+  "tail": "CAOS"
+ },
+ "inputs": {
+  "VIX": 25.6299991607666,
+  "VIX9D": 27.18000030517578,
+  "VIX3M": 24.600000381469727,
+  "VIX6M": 24.700000762939453,
+  "VOLI": 19.978500366210938,
+  "HV5": 36.045021951753306,
+  "HV20": 19.80340779615491,
+  "roll_w": 0.35,
+  "K": 7,
+  "futures": [
+   22.3,
+   21.15,
+   21.35,
+   21.35,
+   21.29,
+   21.43,
+   21.4
+  ]
+ },
+ "metrics": {
+  "Cash VIX Oscillator": {
+   "value": -3.509998321533203,
+   "risk": 0.954420235411971
+  },
+  "Adjust M1:M2 VIX Futures": {
+   "value": -0.012643544832385945,
+   "risk": 0.8990733784122213
+  },
+  "VX30:VIX Roll Yield": {
+   "value": -0.15909088155602746,
+   "risk": 0.9824693213122965
+  },
+  "Traders VRP": {
+   "value": -10.790124717251103,
+   "risk": 0.9802153769095918
+  },
+  "VIX-VOLI": {
+   "value": 5.651498794555664,
+   "risk": 0.9837215126471325
+  },
+  "M1:M2 VIX Futures": {
+   "value": -0.05156950672645755,
+   "risk": 0.9521662910092662
+  },
+  "M4:M7 VIX Futures": {
+   "value": 0.0023419203747070405,
+   "risk": 0.8590032556974706
+  },
+  "VIX9D:VIX": {
+   "value": 1.0604760513134102,
+   "risk": 0.8960681192086151
+  },
+  "VIX:VIX3M": {
+   "value": 1.041869868427837,
+   "risk": 0.9664412722263962
+  },
+  "VIX:VIX6M": {
+   "value": 1.0376517558340541,
+   "risk": 0.9571750563486101
+  },
+  "Simple VRP": {
+   "value": 5.826591364611691,
+   "risk": 0.7082394189832206
+  },
+  "VX30 M1:M2": {
+   "value": 21.5525,
+   "risk": 0.7665915351865765
+  },
+  "VIX (1 month)": {
+   "value": 25.6299991607666,
+   "risk": 0.886801903330829
+  }
+ },
+ "sources": {
+  "VIX": "yahoo",
+  "VIX9D": "yahoo",
+  "VIX3M": "yahoo",
+  "VIX6M": "yahoo",
+  "VOLI": "yahoo"
+ }
+}
