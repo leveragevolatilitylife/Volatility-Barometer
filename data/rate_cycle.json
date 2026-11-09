@@ -1,5 +1,97 @@
-{"updated":"2026-11-09","source":"FOMC statements (manual seed); auto-refreshed from FRED DFEDTARU when reachable",
- "events":[
-  {"date":"2024-09-18","dir":"cut","range":"4.75-5.00"},{"date":"2024-11-07","dir":"cut","range":"4.50-4.75"},{"date":"2024-12-18","dir":"cut","range":"4.25-4.50"},
-  {"date":"2025-09-17","dir":"cut","range":"4.00-4.25"},{"date":"2025-10-29","dir":"cut","range":"3.75-4.00"},{"date":"2025-12-10","dir":"cut","range":"3.50-3.75"},
-  {"date":"2026-09-16","dir":"hike","range":"3.75-4.00"}]}
+{
+ "updated": "2026-11-09",
+ "source": "FRED DFEDTARU",
+ "events": [
+  {
+   "date": "2022-03-17",
+   "dir": "hike",
+   "range": "0.25-0.50"
+  },
+  {
+   "date": "2022-05-05",
+   "dir": "hike",
+   "range": "0.75-1.00"
+  },
+  {
+   "date": "2022-06-16",
+   "dir": "hike",
+   "range": "1.50-1.75"
+  },
+  {
+   "date": "2022-07-28",
+   "dir": "hike",
+   "range": "2.25-2.50"
+  },
+  {
+   "date": "2022-09-22",
+   "dir": "hike",
+   "range": "3.00-3.25"
+  },
+  {
+   "date": "2022-11-03",
+   "dir": "hike",
+   "range": "3.75-4.00"
+  },
+  {
+   "date": "2022-12-15",
+   "dir": "hike",
+   "range": "4.25-4.50"
+  },
+  {
+   "date": "2023-02-02",
+   "dir": "hike",
+   "range": "4.50-4.75"
+  },
+  {
+   "date": "2023-03-23",
+   "dir": "hike",
+   "range": "4.75-5.00"
+  },
+  {
+   "date": "2023-05-04",
+   "dir": "hike",
+   "range": "5.00-5.25"
+  },
+  {
+   "date": "2023-07-27",
+   "dir": "hike",
+   "range": "5.25-5.50"
+  },
+  {
+   "date": "2024-09-19",
+   "dir": "cut",
+   "range": "4.75-5.00"
+  },
+  {
+   "date": "2024-11-08",
+   "dir": "cut",
+   "range": "4.50-4.75"
+  },
+  {
+   "date": "2024-12-19",
+   "dir": "cut",
+   "range": "4.25-4.50"
+  },
+  {
+   "date": "2025-09-18",
+   "dir": "cut",
+   "range": "4.00-4.25"
+  },
+  {
+   "date": "2025-10-30",
+   "dir": "cut",
+   "range": "3.75-4.00"
+  },
+  {
+   "date": "2025-12-11",
+   "dir": "cut",
+   "range": "3.50-3.75"
+  },
+  {
+   "date": "2026-09-17",
+   "dir": "hike",
+   "range": "3.75-4.00"
+  }
+ ],
+ "checked": "2026-11-09"
+}
