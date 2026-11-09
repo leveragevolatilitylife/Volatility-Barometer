@@ -69,8 +69,14 @@ def price_signal(spx_hist, today_level):
 
 def compute(now_et, snap_at):
     day = now_et.date()
-    target = dt.datetime.combine(day, snap_at, ET)
-    limit = int(target.timestamp()) - 300 if snap_at else int(now_et.timestamp()) - 300
+    if snap_at:
+        limit = int(dt.datetime.combine(day, snap_at, ET).timestamp()) - 300
+    else:
+        limit = int(now_et.timestamp()) - 300
+        # live 模式：盤前／休市時改用最近一個有 K 線的交易日
+        gb0, _ = yahoo("^GSPC", "5m", "5d")
+        days = sorted({dt.datetime.fromtimestamp(t, ET).date() for t, _ in gb0 if t <= limit})
+        if days: day = days[-1]
     src = {}
     # 1) 指數：Yahoo 5 分 K（失敗則用 volchart 的即時值）
     vals = {}; stamp = None
@@ -98,8 +104,11 @@ def compute(now_et, snap_at):
     prev_close = [c for t, c in gd if dt.datetime.fromtimestamp(t, ET).date() < day][-1]
     chg = ga[0] / prev_close - 1 if ga else 0.0
     last_hist_day = dt.date.fromisoformat(hist[-1]["date"])
-    spx_today = spxtr[-1] * (1 + chg)  # 以最近一筆歷史收盤為基準（歷史應每日更新）
-    series = np.append(spxtr, spx_today)
+    if day <= last_hist_day:  # 該日已在歷史中（休市時顯示上一交易日）
+        spx_today = spxtr[-1]; series = spxtr; spxtr = spxtr[:-1]
+    else:
+        spx_today = spxtr[-1] * (1 + chg)  # 以最近一筆歷史收盤為基準（歷史應每日更新）
+        series = np.append(spxtr, spx_today)
     hv5, hv20 = bc.hv(series, 5), bc.hv(series, 20)
     K, D, w, chain = cal.roll_weights(day)
     futs = None
