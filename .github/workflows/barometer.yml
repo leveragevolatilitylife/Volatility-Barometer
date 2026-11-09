@@ -19,13 +19,19 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install numpy
-      - name: Snapshot / live
+      - name: Snapshot / live + commit (自動重試，避免多個執行同時寫入造成衝突)
         env: { MODE: "${{ github.event.inputs.mode || 'auto' }}", FORCE: "${{ github.event.inputs.force }}" }
         run: |
           ARGS="--mode $MODE"; [ "$FORCE" = "true" ] && ARGS="$ARGS --force"
-          python scripts/fetch_live.py $ARGS
-      - name: Commit data
-        run: |
           git config user.name "baro-bot"; git config user.email "baro-bot@users.noreply.github.com"
-          git add data/ && (git diff --cached --quiet || git commit -m "data: $(date -u +%FT%TZ)")
-          git pull --rebase -q && git push
+          for i in 1 2 3 4; do
+            python scripts/fetch_live.py $ARGS || exit 1
+            git add data/
+            if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+            git commit -q -m "data: $(date -u +%FT%TZ)"
+            if git push -q; then echo "pushed (try $i)"; exit 0; fi
+            echo "push rejected, resync and retry ($i)"
+            git fetch -q origin main && git reset -q --hard origin/main
+            sleep $((RANDOM % 5 + 2))
+          done
+          exit 1
