@@ -169,10 +169,33 @@ def write_live(r):
     tr["points"].append({"t": r["asof_et"][11:16], "b": r["barometer"], "cov": r["coverage"]}); tr["points"] = tr["points"][-200:]
     json.dump(tr, open(ip, "w")); json.dump(r, open(os.path.join(DATA, "live.json"), "w"), ensure_ascii=False, default=float, indent=1)
 
+def update_rate_cycle():
+    """從 FRED (DFEDTARU，聯邦基金目標區間上限) 更新升/降息事件；取不到就保留現有檔案。每日最多一次。"""
+    p = os.path.join(DATA, "rate_cycle.json"); cur = json.load(open(p)) if os.path.exists(p) else {"events": []}
+    today = dt.date.today().isoformat()
+    if cur.get("checked") == today: return
+    try:
+        txt = http("https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARU&cosd=2022-01-01")
+        prev = None; ev = []
+        for ln in txt.strip().splitlines()[1:]:
+            d, v = ln.split(",")[:2]
+            if v in (".", ""): continue
+            v = float(v)
+            if prev is not None and abs(v - prev) > 1e-9: ev.append({"date": d, "dir": "hike" if v > prev else "cut", "range": f"{v-0.25:.2f}-{v:.2f}"})
+            prev = v
+        if ev:
+            old = [e for e in cur["events"] if e["date"] < "2022-01-01"]
+            cur["events"] = old + ev; cur["source"] = "FRED DFEDTARU"
+        cur["checked"] = today; cur["updated"] = today
+        json.dump(cur, open(p, "w"), ensure_ascii=False, indent=1); print("rate_cycle updated", ev[-1:] )
+    except Exception as e:
+        print("rate_cycle skipped:", str(e)[:80])
+
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--mode", default="auto", choices=["auto", "live"]); ap.add_argument("--force", action="store_true")
     a = ap.parse_args(); now = (dt.datetime.fromisoformat(os.environ['BARO_NOW']).replace(tzinfo=ET) if os.environ.get('BARO_NOW') else dt.datetime.now(ET)); today = now.date(); ctx = Ctx(); path = os.path.join(DATA, "log.csv")
     done = 0
+    update_rate_cycle()
     if a.mode == "auto" and cal.is_trading_day(today):
         have = logged(path, today); sp = os.path.join(DATA, "state.json")
         state = json.load(open(sp)) if os.path.exists(sp) else {}

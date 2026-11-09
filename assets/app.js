@@ -47,6 +47,7 @@ var STR=[['defensive','Defensive Rotation','QLD / XLU / Cash','<20% 或磁滯鎖
 ['tactical','Tactical Volatility','SVIX / GLD / VXZ','<60% SVIX；60–95% GLD；≥95% VXZ'],
 ['tail','Strategic Tail Risk','SPY / IYR·KO / CAOS','0.8×溫度計＋0.2×S&P價格訊號：<60% SPY；60–90% IYR/KO；≥90% CAOS']];
 $('scale').innerHTML=RISK_STEPS.slice().reverse().map(function(c){return '<b style="background:rgb('+c.join(',')+')"></b>'}).join('');
+if(window.BARO)BARO.initUpdate($('updmount'),function(){location.reload()});
 Promise.all([get('live.json'),get('log.csv',1),get('weights.json')]).then(function(r){
  var L=r[0],S=r[1]?parseCSV(r[1]):[],Wt=r[2];
  if(!L){$('asof').textContent='尚無即時資料（等待第一次排程執行）';gauge(null)}

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>自動回測 | 波動率溫度計 | Yung's Journey to FIRE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.ctl label{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:11px;color:var(--text-tertiary)}
+select,input[type=date],input[type=number]{background:var(--bg);color:var(--text-primary);border:1px solid var(--border);border-radius:3px;font-family:var(--mono);font-size:12.5px;padding:6px 8px}
+.chk{flex-direction:row!important;align-items:center;gap:8px!important;font-size:12px!important;color:var(--text-secondary)!important}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}.card:hover{transform:none}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-family:var(--mono);font-size:12px;margin:10px 0}.stat small{color:var(--text-tertiary);display:block;font-size:10.5px}.stat b{font-weight:500;font-size:15px}
+.up{color:#34d399}.dn{color:#e5654f}.chart{width:100%;height:170px}
+h3.sec{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.08em;margin:34px 0 12px;font-weight:500}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}th{color:var(--text-tertiary);font-weight:400;text-align:right;padding:7px 8px;border-bottom:1px solid var(--border)}th:first-child,td:first-child{text-align:left}
+td{padding:7px 8px;border-bottom:1px solid var(--border-soft);text-align:right}tr:hover td{background:var(--bg-panel-hover)}.scroll{overflow-x:auto}
+.note{font-size:12.5px;color:var(--text-secondary);margin-top:10px;line-height:1.7}.warn{font-family:var(--mono);font-size:11.5px;color:var(--amber);background:var(--amber-dim);border-radius:4px;padding:8px 12px;margin-top:12px}
+.desc{color:var(--text-secondary);font-size:12.5px}.pill{font-family:var(--mono);font-size:10.5px;color:var(--accent);border:1px solid rgba(var(--accent-rgb),.5);border-radius:3px;padding:1px 7px}
+@media(max-width:900px){.grid3{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<header class="site"><a class="brand" href="https://leveragevolatilitylife.github.io/"><img src="assets/avatar.jpg" alt="" onerror="this.style.display='none'"><span>Yung's Journey to FIRE</span></a>
+<div class="hr"><span class="meta-date">BACKTEST ON LOGGED DATA</span><a class="handle" href="https://www.instagram.com/leverage_volatility_life/">@leverage_volatility_life</a></div></header>
+<a class="crumb" href="https://leveragevolatilitylife.github.io/">← 回到入口</a>
+<nav class="tabs"><a href="index.html">即時溫度計</a><a class="on" href="backtest.html">自動回測</a></nav>
+<div class="eyebrow" style="margin-top:20px">INTRADAY ROTATION BACKTEST</div>
+<h1>輪動策略自動回測</h1><div class="sub">Backtest on collected snapshots</div>
+<p class="note">使用網站自動收集的時段紀錄（開盤、每半小時、收盤，含 11 檔標的價格），在瀏覽器內即時回測。資料從建站後的第一個交易日開始累積，樣本期間很短時結果只具參考性。</p>
+<div style="margin-top:14px" id="updmount"></div>
+
+<h3 class="sec">// 參數</h3>
+<div class="card"><div class="ctl">
+ <label>開始日期<select id="start"></select></label>
+ <label>決策頻率<select id="freq"></select></label>
+ <label>執行時點<select id="delay"><option value="same">同時段價格成交</option><option value="next">延後一個時段成交</option></select></label>
+ <label>交易成本（bp／邊）<input type="number" id="cost" value="5" min="0" step="1"></label>
+ <label>Tactical 低風險標的<select id="tacLow"><option>SVIX</option><option>SVXY</option></select></label>
+ <label>Tail 中間區間標的<select id="regime"><option value="auto">依利率週期（自動）</option><option value="cut">固定 IYR（降息週期）</option><option value="hike">固定 KO（升息週期）</option></select></label>
+ <label>Defensive 基準<select id="b_defensive"></select></label>
+ <label>Tactical 基準<select id="b_tactical"></select></label>
+ <label>Tail 基準<select id="b_tail"></select></label>
+ <label class="chk"><input type="checkbox" id="mincov" checked> 排除覆蓋率 &lt; 95% / 補記列（不當決策用）</label>
+</div><div class="note" id="cyc"></div></div>
+
+<div id="msg"></div>
+<div class="grid3" id="res"></div>
+
+<h3 class="sec">// 決策時段比較 · 盤中監控調倉有沒有幫助？</h3>
+<p class="desc">固定其他參數，只改變「何時決策」：每個時段都決策（盤中即時監控），或每天只在單一時段決策。數字為期間總報酬（含成本）。</p>
+<div class="scroll"><table id="cmp"></table></div>
+
+<h3 class="sec">// 調倉明細</h3>
+<div class="scroll"><table id="trades"></table></div>
+<p class="note">計算方式：持倉依各時段溫度計換算（Defensive：&lt;20% 鎖定 Cash、≥30% 解除；20–66% QLD；66–85% XLU；≥85% Cash。Tactical：&lt;60% 低風險標的；60–95% GLD；≥95% VXZ。Tail：0.8×溫度計＋0.2×S&amp;P 價格訊號，&lt;60% SPY；60–90% IYR/KO；≥90% CAOS）。報酬由各時段價格連乘，Cash 不計利息，含隔夜跳空；基準為買進持有所選標的。標的價格為 Yahoo 5 分 K（開盤取第一根開盤價、收盤取最後一根收盤價），非逐筆成交價。<br>Tail 中間區間：依 VTS「安全資產與利率曝險」的觀念，降息／不升息週期用 IYR、升息週期用 KO。本站以「最近一次聯準會調整利率的方向」判定週期（目前資料見上方），可手動覆寫；此判定規則為本站實作，並非逐字取自原文。</p>
+<footer class="site">本網站與所連結頁面之內容僅為個人資料整理與策略追蹤工具,不構成任何投資建議。回測結果不代表未來績效。</footer>
+</div>
+<script src="assets/common.js"></script><script src="assets/engine.js"></script><script src="assets/backtest.js"></script></body></html>

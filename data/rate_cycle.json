@@ -1,0 +1,5 @@
+{"updated":"2026-11-09","source":"FOMC statements (manual seed); auto-refreshed from FRED DFEDTARU when reachable",
+ "events":[
+  {"date":"2024-09-18","dir":"cut","range":"4.75-5.00"},{"date":"2024-11-07","dir":"cut","range":"4.50-4.75"},{"date":"2024-12-18","dir":"cut","range":"4.25-4.50"},
+  {"date":"2025-09-17","dir":"cut","range":"4.00-4.25"},{"date":"2025-10-29","dir":"cut","range":"3.75-4.00"},{"date":"2025-12-10","dir":"cut","range":"3.50-3.75"},
+  {"date":"2026-09-16","dir":"hike","range":"3.75-4.00"}]}

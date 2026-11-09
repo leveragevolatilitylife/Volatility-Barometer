@@ -25,3 +25,8 @@ h1{font-weight:900;color:var(--heading);font-size:clamp(26px,4.5vw,42px);line-he
 .live{background:var(--green-dim);color:var(--green)}.pend{background:var(--amber-dim);color:var(--amber)}
 footer.site{margin:48px 0 32px;padding-top:18px;border-top:1px solid var(--border-soft);font-size:12px;color:var(--text-tertiary)}
 @media(max-width:560px){.meta-date{display:none}}@media(max-width:380px){.handle{display:none}}
+.btn{font-family:var(--mono);font-size:12px;color:var(--text-primary);background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:5px 12px;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}.btn.ghost{padding:5px 8px;margin-left:4px;color:var(--text-tertiary)}
+.upd{display:inline-flex;align-items:center;gap:4px}.upd-msg{font-family:var(--mono);font-size:11px;margin-left:8px;color:var(--text-secondary)}
+nav.tabs{display:flex;gap:6px;margin:22px 0 0}nav.tabs a{font-family:var(--mono);font-size:12.5px;padding:6px 14px;border:1px solid var(--border);border-radius:4px;color:var(--text-secondary)}
+nav.tabs a.on{color:var(--accent);border-color:rgba(var(--accent-rgb),.6);background:var(--bg-panel)}nav.tabs a:hover{color:var(--accent)}

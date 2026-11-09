@@ -18,6 +18,12 @@
 - 因為 volchart 期貨約延遲 15 分鐘，時段 T 要到 T+16 分鐘（收盤 +20 分）才記錄。錯過超過 45 分鐘時仍會用 Yahoo 補記價格，但期貨類指標視為缺值（`late=1`，覆蓋率約 47%）——**回測請排除 `late=1` 或 `coverage<0.95` 的列**。
 - 回測用法：以時段 T 的部位訊號，在同一時段（或下一時段）的標的價格建倉，與 `log.csv` 的收盤列比較，即可比較「盤中即時調倉」與「收盤才決定」的差異；`def_low` 為 Defensive 磁滯狀態。
 
+## 網頁功能
+- `index.html` 即時溫度計；`backtest.html` 在瀏覽器內以 `data/log.csv` 自動回測（開始日期、決策頻率、成交時點、成本、各策略基準下拉選單、決策時段比較）。
+- 「↻ 立即更新資料」按鈕：用 GitHub API 觸發 workflow。首次按下會要求貼上 fine-grained token（僅限本 repo、Actions: Read and write），只存在該瀏覽器的 localStorage，不會上傳。
+- Tail 中間區間的 IYR/KO：依 `data/rate_cycle.json`（最近一次 FOMC 調整方向：降息→IYR、升息→KO），workflow 每日嘗試由 FRED(DFEDTARU) 自動更新，取不到則沿用檔案內容；網頁可手動覆寫。
+- 前端引擎 `assets/engine.js` 可用 node 單獨測試。
+
 ## 部署
 1. 把整個資料夾放進 GitHub repo，Settings → Pages 選 main / root。
 2. Settings → Actions → General → Workflow permissions 選 Read and write。
