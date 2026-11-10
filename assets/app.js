@@ -10,6 +10,12 @@ var RISK_STEPS=(function(){var R=[255,36,0],M=[255,225,53],G=[0,255,127];var o=[
 function riskRgb(risk){if(risk==null||isNaN(risk))return null;var f=Math.max(0,Math.min(1,1-risk));return RISK_STEPS[Math.min(9,Math.floor(f*10))]}
 function rgba(c,a){return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'}
 function rkCell(risk,txt){var c=riskRgb(risk);return c?'<td class="rk" style="background:'+rgba(c,.62)+';box-shadow:inset 0 0 0 1px '+rgba(c,.9)+'">'+txt+'</td>':'<td class="na">'+txt+'</td>'}
+/* 倉位字色：依該倉位所對應的風險區間，取區間中點套用同一組紅黃綠色階（綠＝低風險區、紅＝高風險區） */
+function posRisk(st,pos,b,ts){
+ if(st==='defensive')return pos==='Cash'?(b>=.85?.925:.10):(pos==='QLD'?.43:.755);
+ if(st==='tactical')return pos==='GLD'?.775:(pos==='VXZ'?.975:.30);
+ return pos==='SPY'?.30:(pos==='CAOS'?.95:.75)}
+function posColor(st,pos,b,ts){var c=riskRgb(posRisk(st,pos,b,ts));return c?'rgb('+c.join(',')+')':''}
 function get(f,csv){return fetch(base+'/'+f+'?_='+Math.floor(Date.now()/60000)).then(function(r){if(!r.ok)throw 0;return csv?r.text():r.json()}).catch(function(){return null})}
 function pct(x){return x==null||isNaN(x)?'--':(x*100).toFixed(1)+'%'}
 function el(t,a,txt){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e}
@@ -55,7 +61,7 @@ Promise.all([get('live.json'),get('log.csv',1),get('weights.json')]).then(functi
   $('asof').textContent='資料日 '+L.trade_date+' · 更新 '+L.asof_et.slice(11,16)+' ET'+(L.bar_time_et?' · 最新K線 '+L.bar_time_et:'');
   $('kv').innerHTML=[['VIX',L.inputs.VIX],['VIX9D',L.inputs.VIX9D],['VIX3M',L.inputs.VIX3M],['S&P價格訊號',L.price_signal*100,'%'],['覆蓋率',L.coverage*100,'%']].map(function(k){return '<div><small>'+k[0]+'</small><b>'+(k[1]==null?'--':(+k[1]).toFixed(k[2]?0:2)+(k[2]||''))+'</b></div>'}).join('');
   if(L.coverage<.95){var w=$('warn');w.style.display='block';w.textContent='⚠ 覆蓋率 '+(L.coverage*100).toFixed(0)+'%：部分指標（多為 VIX 期貨）暫缺，已重新正規化，數值僅供參考。'}
-  $('strats').innerHTML=STR.map(function(s){return '<div class="card st"><div class="tick">'+s[2]+'</div><h2>'+s[1]+'</h2><div class="pos">'+L.strategies[s[0]]+'</div><div class="desc">'+s[3]+'</div></div>'}).join('');
+  $('strats').innerHTML=STR.map(function(s){return '<div class="card st"><div class="tick">'+s[2]+'</div><h2>'+s[1]+'</h2><div class="pos" style="color:'+posColor(s[0],L.strategies[s[0]],L.barometer,L.tail_score)+'">'+L.strategies[s[0]]+'</div><div class="desc">'+s[3]+'</div></div>'}).join('');
   var wm={};if(Wt)Wt.metrics.forEach(function(m){wm[m.name]=m.weight});
   var h='<tr><th>指標</th><th class="num">數值</th><th>風險分位</th><th class="num">權重</th></tr>';
   Object.keys(L.metrics).forEach(function(k){var m=L.metrics[k];h+='<tr><td>'+k+'</td><td class="num">'+(m.value==null?'<span class="na">缺</span>':m.value.toFixed(4))+'</td>'+rkCell(m.risk,m.risk==null?'--':(m.risk*100).toFixed(0)+'%')+'<td class="num">'+(wm[k]!=null?(wm[k]*100).toFixed(1)+'%':'')+'</td></tr>'});
@@ -67,7 +73,7 @@ Promise.all([get('live.json'),get('log.csv',1),get('weights.json')]).then(functi
   lineChart($('intra'),rows.map(function(x){return x.slot}),rows.map(function(x){return +x.barometer}),{hollow:rows.map(function(x){return x.late==='1'||+x.coverage<.95})});
   $('logmeta').textContent=rows.length?('已記錄 '+rows.length+' / 14 個時段；累計 '+S.length+' 筆 / '+days.length+' 個交易日'):'';
   var h='<tr><th>時段 ET</th><th class="num">溫度計</th><th>Def</th><th>Tac</th><th>Tail</th><th class="num">VIX</th>'+TICKERS.map(function(t){return '<th class="num">'+t+'</th>'}).join('')+'<th class="num">覆蓋</th></tr>';
-  rows.forEach(function(x){h+='<tr class="'+(x.late==='1'?'slotrow-late':'')+'"><td>'+x.slot+(x.late==='1'?' *':'')+'</td>'+rkCell(+x.barometer,pct(+x.barometer))+'<td>'+x.defensive+'</td><td>'+x.tactical+'</td><td>'+x.tail+'</td><td class="num">'+(+x.VIX).toFixed(2)+'</td>'+TICKERS.map(function(t){return '<td class="num">'+(x[t]===''?'<span class="na">–</span>':(+x[t]).toFixed(2))+'</td>'}).join('')+'<td class="num">'+(+x.coverage*100).toFixed(0)+'%</td></tr>'});
+  rows.forEach(function(x){h+='<tr class="'+(x.late==='1'?'slotrow-late':'')+'"><td>'+x.slot+(x.late==='1'?' *':'')+'</td>'+rkCell(+x.barometer,pct(+x.barometer))+'<td style="color:'+posColor('defensive',x.defensive,+x.barometer)+';font-weight:600">'+x.defensive+'</td><td style="color:'+posColor('tactical',x.tactical,+x.barometer)+';font-weight:600">'+x.tactical+'</td><td style="color:'+posColor('tail',x.tail.split('/')[0]==='IYR'?'IYR/KO':x.tail,+x.barometer,+x.tail_score)+';font-weight:600">'+x.tail+'</td><td class="num">'+(+x.VIX).toFixed(2)+'</td>'+TICKERS.map(function(t){return '<td class="num">'+(x[t]===''?'<span class="na">–</span>':(+x[t]).toFixed(2))+'</td>'}).join('')+'<td class="num">'+(+x.coverage*100).toFixed(0)+'%</td></tr>'});
   $('snaps').innerHTML=rows.length?h:'<tr><td class="na">尚無紀錄 — 下一個美股交易日開盤時起自動寫入（* 為補記，期貨缺漏）</td></tr>'}
  sel.onchange=show;show();
  var k=S.filter(function(x){return x.slot==='10:30'});
