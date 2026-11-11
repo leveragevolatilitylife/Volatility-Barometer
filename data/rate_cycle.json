@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-10",
+ "updated": "2026-11-11",
  "source": "FRED DFEDTARU",
  "events": [
   {
@@ -93,5 +93,5 @@
    "range": "3.75-4.00"
   }
  ],
- "checked": "2026-11-10"
+ "checked": "2026-11-11"
 }
