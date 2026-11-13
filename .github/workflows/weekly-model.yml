@@ -1,0 +1,17 @@
+name: weekly-model-reminder
+on:
+  schedule:
+    - cron: "0 1 * * 6"   # 每週六 09:00 台北時間
+  workflow_dispatch:
+permissions: { issues: write, contents: read }
+jobs:
+  open-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 開啟本週更新工單
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          last=$(tail -n1 data/log.csv | cut -d, -f1)
+          gh issue create --title "模型週更新 $(date -u +%F)" \
+            --body "log.csv 最新日期：$last。請到 Claude 專案說「更新 Volatility Barometer 模型」，更新後的 model/Volatility_Barometer_model.xlsx 會提交到本 repo，並關閉此工單。" || true
