@@ -1,17 +1,61 @@
-name: weekly-model-reminder
+name: weekly-model-update
 on:
   schedule:
     - cron: "0 1 * * 6"   # 每週六 09:00 台北時間
   workflow_dispatch:
-permissions: { issues: write, contents: read }
+permissions: { contents: write, issues: write }
+concurrency: { group: barometer, cancel-in-progress: false }
 jobs:
-  open-issue:
+  update:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: 開啟本週更新工單
+      - uses: actions/checkout@v4
+        with:
+          repository: leveragevolatilitylife/stock-data-collection
+          ref: data
+          path: src/sdc
+          token: ${{ secrets.DATA_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          repository: leveragevolatilitylife/TWN-Stocks-Rotation-Strategy
+          path: src/twn
+          token: ${{ secrets.DATA_TOKEN || github.token }}
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: install
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libreoffice-calc
+          pip install -q openpyxl numpy pandas
+      - name: refresh daily extras (SPXTR/VVIX/SKEW/VOLI)
+        run: python scripts/fetch_daily_extras.py
+      - name: update model
+        id: upd
+        run: |
+          set +e
+          python model/tools/update_model.py --model model/Volatility_Barometer_model.xlsx \
+            --sdc src/sdc/Stock_data_collection.xlsx --latest src/twn/data/latest.xlsx \
+            --extras data/daily_extras.csv --log data/log.csv --out /tmp/new_model.xlsx | tee /tmp/update.log
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> $GITHUB_OUTPUT
+          [ $rc -eq 3 ] && exit 0
+          exit $rc
+      - name: commit
+        if: steps.upd.outputs.rc == '0'
+        run: |
+          cp /tmp/new_model.xlsx model/Volatility_Barometer_model.xlsx
+          git config user.name "baro-bot"; git config user.email "baro-bot@users.noreply.github.com"
+          git add model/Volatility_Barometer_model.xlsx data/daily_extras.csv
+          git commit -q -m "model: weekly update $(date -u +%F)"
+          for i in 1 2 3; do git pull -q --rebase && git push -q && break || sleep 5; done
+      - name: 開工單（成功：附更新摘要；失敗：附錯誤）
+        if: always()
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          last=$(tail -n1 data/log.csv | cut -d, -f1)
-          gh issue create --title "模型週更新 $(date -u +%F)" \
-            --body "log.csv 最新日期：$last。請到 Claude 專案說「更新 Volatility Barometer 模型」，更新後的 model/Volatility_Barometer_model.xlsx 會提交到本 repo，並關閉此工單。" || true
+          rc="${{ steps.upd.outputs.rc }}"
+          if [ "$rc" = "0" ]; then t="模型已更新 $(date -u +%F)，請核對"
+          elif [ "$rc" = "3" ]; then exit 0
+          else t="模型週更新失敗 $(date -u +%F)"; fi
+          { echo '```'; tail -n 40 /tmp/update.log 2>/dev/null; echo '```'; } > /tmp/body.md
+          gh issue create --title "$t" --body-file /tmp/body.md || true
