@@ -16,6 +16,7 @@ ET = ZoneInfo("America/New_York"); DATA = os.path.join(ROOT, "data")
 UA = {"User-Agent": "Mozilla/5.0 (compatible; baro-bot/1.0)"}
 SLOTS = ["09:30"] + [f"{h:02d}:{m:02d}" for h in range(10, 16) for m in (0, 30)] + ["16:00"]
 TICKERS = ["SVIX", "SVXY", "GLD", "VXZ", "QLD", "QQQ", "XLU", "SPY", "IYR", "KO", "CAOS"]
+RAW_SYMS = (("VIX1Y", "^VIX1Y"), ("VVIX", "^VVIX"), ("SKEW", "^SKEW"), ("SPXTR", "^SP500TR"), ("SPX", "^GSPC"))
 INDEX_SYMS = (("VIX", "^VIX"), ("VIX9D", "^VIX9D"), ("VIX3M", "^VIX3M"), ("VIX6M", "^VIX6M"), ("VOLI", "^VOLI"))
 FUT_LAG_MIN, LATE_MIN = 16, 45
 
@@ -116,6 +117,11 @@ def compute(ctx, day, slot, now_et, low_flag=False, allow_futures=True):
     for t in TICKERS:
         a = slot_price(ctx.get_bars(t), day, slot)
         prices[t] = round(a[0], 4) if a else None
+    raw = {}
+    for key, sym in RAW_SYMS:
+        try:
+            a = slot_price(ctx.get_bars(sym), day, slot); raw[key] = a[0] if a else None
+        except Exception: raw[key] = None
     hist = read_history(); spxtr = np.array([float(r["SPXTR"]) for r in hist])
     ga = slot_price(ctx.get_bars("^GSPC"), day, slot)
     prev = [c for d, c in ctx.get_daily("^GSPC") if d < day]
@@ -146,7 +152,7 @@ def compute(ctx, day, slot, now_et, low_flag=False, allow_futures=True):
             "barometer": round(score, 4), "coverage": round(cov, 3), "price_signal": round(px, 4), "tail_score": round(tail_s, 4),
             "strategies": {"defensive": dstate, "tactical": bc.tactical_state(score), "tail": tail}, "def_low": int(low2),
             "prices": prices, "inputs": {**vals, "HV5": hv5, "HV20": hv20, "roll_w": w, "K": K, "futures": futs},
-            "metrics": detail, "sources": src, "errors": ctx.err}
+            "raw": raw, "metrics": detail, "sources": src, "errors": ctx.err}
 
 LOG_FIXED = ["date", "slot", "bar_time_et", "late", "barometer", "coverage", "defensive", "tactical", "tail", "price_signal", "tail_score", "def_low",
              "VIX", "VIX9D", "VIX3M", "VIX6M", "VOLI", "HV5", "HV20"]
@@ -159,6 +165,12 @@ def log_row(r, late):
             r["strategies"]["tail"], r["price_signal"], r["tail_score"], r["def_low"]] + \
            [f(r["inputs"].get(k)) for k in ("VIX", "VIX9D", "VIX3M", "VIX6M", "VOLI", "HV5", "HV20")] + \
            [f(r["prices"].get(t)) for t in TICKERS] + [f(v["value"]) for v in r["metrics"].values()]
+
+RAW_COLS = ["date", "slot", "late"] + [f"M{i}" for i in range(1, 8)] + ["VIX1Y", "VVIX", "SKEW", "SPXTR", "SPX"]
+def raw_row(r, late):
+    f = lambda v: "" if v is None or (isinstance(v, float) and np.isnan(v)) else (round(v, 6) if isinstance(v, float) else v)
+    futs = (r["inputs"].get("futures") or []) + [None] * 7
+    return [r["trade_date"], r["slot"], int(late)] + [f(x) for x in futs[:7]] + [f(r["raw"].get(k)) for k in ("VIX1Y", "VVIX", "SKEW", "SPXTR", "SPX")]
 
 def logged(path, day):
     if not os.path.exists(path): return set()
@@ -217,6 +229,11 @@ def main():
                 wr = csv.writer(f)
                 if new: wr.writerow(log_cols())
                 wr.writerow(log_row(r, late))
+            rp = os.path.join(DATA, "raw_log.csv"); rnew = not os.path.exists(rp)
+            with open(rp, "a", newline="") as f:
+                wr = csv.writer(f)
+                if rnew: wr.writerow(RAW_COLS)
+                wr.writerow(raw_row(r, late))
             json.dump({"low": low, "date": today.isoformat()}, open(sp, "w")); done += 1
             print("logged", s, r["barometer"], "late" if late else "")
     # live.json：盤中 (09:25–16:40 ET) 或手動 / 尚無檔案時更新

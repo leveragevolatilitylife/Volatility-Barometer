@@ -44,3 +44,4 @@
 
 ## 測試
 `python tests/test_core.py`（需原始 df2.pkl）、`python tests/test_fetch_mock.py`（離線管線）。
+- `data/raw_log.csv`：同時段另存原始值（M1–M7、VIX1Y、VVIX、SKEW、SPXTR、SPX），供每週更新 Excel 用（SDEX/TDEX 無免費來源，未記錄）。
