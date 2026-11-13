@@ -1,0 +1,27 @@
+name: daily-extras
+on:
+  workflow_dispatch:
+  push:
+    paths: ["scripts/fetch_daily_extras.py", ".github/workflows/extras.yml"]
+permissions: { contents: write }
+concurrency: { group: barometer, cancel-in-progress: false }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install numpy
+      - name: fetch + commit
+        run: |
+          git config user.name "baro-bot"; git config user.email "baro-bot@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            python scripts/fetch_daily_extras.py || exit 1
+            git add data/daily_extras.csv
+            if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+            git commit -q -m "data: daily extras $(date -u +%FT%TZ)"
+            if git push -q; then exit 0; fi
+            git fetch -q origin main && git reset -q --hard origin/main; sleep 3
+          done
+          exit 1
