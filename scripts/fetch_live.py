@@ -99,6 +99,24 @@ def price_signal(spx_hist, today_level):
 def read_history():
     return list(csv.DictReader(open(os.path.join(DATA, "history.csv"))))
 
+def extend_history(ctx, hist, day):
+    """history.csv 只到某日；把其後、`day` 之前的交易日用 ^GSPC 日報酬接上 SPXTR（近似），
+    並以 log.csv 當日 16:00 的 VX30 補 AK(=VX30−HV5)，避免 HV5/HV20 與 Traders VRP 用到過期序列。"""
+    spx = [float(r["SPXTR"]) for r in hist]; ak = [float(r["AK"]) for r in hist]
+    last = dt.date.fromisoformat(hist[-1]["date"]); cl = dict(ctx.get_daily("^GSPC")); vx = {}
+    lp = os.path.join(DATA, "log.csv")
+    if os.path.exists(lp):
+        for r in csv.DictReader(open(lp)):
+            if r["slot"] == "16:00" and r["late"] == "0" and r.get("VX30 M1:M2"): vx[r["date"]] = float(r["VX30 M1:M2"])
+    prev_d = last
+    for d, c in sorted(cl.items()):
+        if d <= last or d >= day: continue
+        if prev_d not in cl: break
+        spx.append(spx[-1] * c / cl[prev_d]); prev_d = d
+        h5 = bc.hv(spx, 5)
+        ak.append(vx[d.isoformat()] - h5 if d.isoformat() in vx else float("nan"))
+    return np.array(spx), ak
+
 def compute(ctx, day, slot, now_et, low_flag=False, allow_futures=True):
     src = {}; vals = {}; stamp = None
     for key, sym in INDEX_SYMS:
@@ -122,7 +140,8 @@ def compute(ctx, day, slot, now_et, low_flag=False, allow_futures=True):
         try:
             a = slot_price(ctx.get_bars(sym), day, slot); raw[key] = a[0] if a else None
         except Exception: raw[key] = None
-    hist = read_history(); spxtr = np.array([float(r["SPXTR"]) for r in hist])
+    hist = read_history()
+    spxtr, aks = extend_history(ctx, hist, day)
     ga = slot_price(ctx.get_bars("^GSPC"), day, slot)
     prev = [c for d, c in ctx.get_daily("^GSPC") if d < day]
     chg = ga[0] / prev[-1] - 1 if ga and prev else 0.0
@@ -137,7 +156,7 @@ def compute(ctx, day, slot, now_et, low_flag=False, allow_futures=True):
         name = {v: k for k, v in cal.MONTHS.items()}; mp = {months[i]: fut[i] for i in range(len(months))}
         futs = [mp.get(name[m]) for (_, m, _) in chain[:7]]
         if any(v is None for v in futs[:3]): futs = None
-    akp = [float(r["AK"]) for r in hist[-4:]][::-1]
+    akp = list(aks[-4:])[::-1]
     m = bc.metrics_from_raw(vals["VIX"], vals["VIX9D"], vals["VIX3M"], vals["VIX6M"], vals.get("VOLI", float("nan")), futs, w, hv5, hv20, akp)
     if "VOLI" not in vals: m["VIX-VOLI"] = float("nan")
     cfg = json.load(open(os.path.join(DATA, "weights.json")))
