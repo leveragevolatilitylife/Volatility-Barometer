@@ -15,6 +15,26 @@ from xml.sax.saxutils import escape
 
 SHEET_METRICE = 5
 SHEETS = {6: 'VTS Def', 7: 'Model Def', 8: 'VTS Tac', 9: 'Model Tac', 10: 'VTS Tail', 11: 'Model Tail'}
+TITLES = {5: 'Volatility Metrice', 6: 'VTS (Defensive Rotation)', 7: 'Model (Defensive Rotation)', 8: 'VTS (Tactical Volatility)',
+          9: 'Model (Tactical Volatility)', 10: 'VTS (Strategic Tail Risk)', 11: 'Model (Strategic Tail Risk)'}
+FILES = {}   # 內部編號 -> 'xl/worksheets/sheetN.xml'（依分頁名稱解析，刪除/重排分頁後仍可用）
+def resolve_files(X):
+    wb = open(f'{X}/xl/workbook.xml', encoding='utf8').read()
+    rl = open(f'{X}/xl/_rels/workbook.xml.rels', encoding='utf8').read()
+    rid2t = {}
+    for m in re.finditer(r'<Relationship\b[^>]*>', rl):
+        t = m.group(0); i = re.search(r'Id="([^"]+)"', t); g = re.search(r'Target="([^"]+)"', t)
+        if i and g: rid2t[i.group(1)] = g.group(1)
+    name2file = {}
+    for m in re.finditer(r'<sheet\b[^>]*>', wb):
+        t = m.group(0); nm = re.search(r'name="([^"]+)"', t); rid = re.search(r'r:id="([^"]+)"', t)
+        if nm and rid:
+            tg = rid2t[rid.group(1)].lstrip('/')
+            name2file[nm.group(1).replace('&amp;', '&')] = tg if tg.startswith('xl/') else 'xl/' + tg
+    for n, t in TITLES.items():
+        if t not in name2file: raise SystemExit(f'找不到分頁「{t}」，請確認分頁名稱沒有被改')
+        FILES[n] = name2file[t]
+    return name2file
 ser = lambda d: (d - dt.date(1899, 12, 30)).days
 
 # ---------------------------------------------------------------- data
@@ -226,7 +246,7 @@ def setv(sh, r, col, val):
     else: sh.setcell(r, col, v=fmt_num(val))
 
 def build_strategy(num, srcdir, dst, rows_new, N, holds, vals=None):
-    sh = Sheet(f'{srcdir}/xl/worksheets/sheet{num}.xml')
+    sh = Sheet(f'{srcdir}/{FILES[num]}')
     sh.shift_columns(N)
     for i, x in enumerate(rows_new):
         r = 4 + i; sp = spec(num, x, holds.get(x['date'], {}))
@@ -255,7 +275,7 @@ def package(workdir, out, N, sheet_files):
     W = workdir + '_pkg'
     if os.path.exists(W): shutil.rmtree(W)
     shutil.copytree(workdir, W)
-    for n, p in sheet_files.items(): shutil.copy(p, f'{W}/xl/worksheets/sheet{n}.xml')
+    for n, p in sheet_files.items(): shutil.copy(p, f'{W}/{FILES[n]}')
     if os.path.exists(W + '/xl/calcChain.xml'):
         os.remove(W + '/xl/calcChain.xml')
         ct = open(W + '/[Content_Types].xml', encoding='utf8').read()
@@ -290,7 +310,7 @@ def read_vals(xlsx, maxrows):
     wb = openpyxl.load_workbook(xlsx, read_only=True, data_only=True)
     out = {}
     for n in (SHEET_METRICE, *SHEETS):
-        ws = wb.worksheets[n - 1]; d = {}
+        ws = wb[TITLES[n]]; d = {}
         for i, row in enumerate(ws.iter_rows(max_row=maxrows[n], values_only=True), 1):
             for j, v in enumerate(row, 1):
                 if v is None: continue
@@ -322,9 +342,9 @@ def main():
     a = ap.parse_args()
     if os.path.exists(a.work): shutil.rmtree(a.work)
     os.makedirs(a.work); X = a.work + '/x'
-    zipfile.ZipFile(a.model).extractall(X)
+    zipfile.ZipFile(a.model).extractall(X); resolve_files(X)
     # 最後一個日期
-    s5 = open(f'{X}/xl/worksheets/sheet5.xml', encoding='utf8').read(5_000_000)
+    s5 = open(f'{X}/{FILES[5]}', encoding='utf8').read(5_000_000)
     m = re.search(r'<c r="A5"[^>]*><v>(\d+)</v>', s5)
     last = dt.date.fromisoformat(a.assume_last) if a.assume_last else dt.date(1899, 12, 30) + dt.timedelta(days=int(m.group(1)))
     V, Nq, LT, EX, LG = load_sources(a)
@@ -339,7 +359,7 @@ def main():
     # 既有的 VTS 實際持股：新列沒有（使用者自填），先空
     shift_charts(X, N)
     s5new = f'{a.work}/sheet5_new.xml'
-    metrice_insert(f'{X}/xl/worksheets/sheet5.xml', s5new, new_desc, N)
+    metrice_insert(f'{X}/{FILES[5]}', s5new, new_desc, N)
     files = {5: s5new}
     for n in SHEETS:
         build_strategy(n, X, f'{a.work}/sheet{n}_1.xml', new_desc, N, {})
