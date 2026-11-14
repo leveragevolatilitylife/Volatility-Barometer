@@ -74,7 +74,7 @@ def build_rows(dates, V, N, LT, EX, LG):
         # Metrice 欄位（model 的欄位字母）
         m = {'AM': L[12], 'AN': L[13], 'AO': L[14], 'AP': L[15], 'AQ': L[16]}
         for i, c in enumerate(['AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY']): m[c] = L[1 + i]
-        m.update(BH=fnum(e.get('VOLI')), BI=fnum(e.get('VVIX')), BO=fnum(e.get('SKEW')),
+        m.update(BH=fnum(e.get('VOLI')), BI=fnum(e.get('VVIX')), BM=fnum(e.get('SDEX')), BN=fnum(e.get('TDEX')), BO=fnum(e.get('SKEW')),
                  CM=x['SVIX_c'], CO=fnum(g.get('SVXY')), CQ=x['GLD_c'], CS=x['VXZ_c'], CU=x['SSO_c'], CW=x['SPY_c'],
                  CY=x['IYR_c'], DA=x['KO_c'], DC=x['CAOS_c'], DE=fnum(e.get('SPXTR')))
         x['metrice'] = m
